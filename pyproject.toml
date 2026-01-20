@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wignax"
+version = "0.1.0"
+description = "Phase-space open quantum many-body dynamics with JAX"
+readme = "README.md"
+requires-python = ">=3.14"
+license = {text = "Apache-2.0"}
+authors = [
+  {name = "Juan E. Ardila-Garcia", email = "juardilag@unal.edu.co"}
+]
+dependencies = [
+
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]

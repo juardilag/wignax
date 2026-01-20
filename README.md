@@ -1,4 +1,4 @@
-# Wignax 🐈
+# Wignax 🐈‍⬛
 
 **Wignax** is a JAX-based Python library for simulating Open Quantum Many-Body Dynamics using phase-space methods, specifically the Dissipative Truncated Wigner Approximation (DTWA).
 
