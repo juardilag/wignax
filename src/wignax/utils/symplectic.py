@@ -12,35 +12,38 @@ def generating_eom_bosons(
     hamiltonian_func: Callable[[Time, State, Args], float]
 ) -> DriftFunc:
     """
-    Generates the Equation of Motion (Drift) for Bosonic systems using complex variables.
-
-    Implements the symplectic flow for complex phase space variables \alpha:
-        d(alpha)/dt = -i * dH/d(alpha*)
-
-    JAX Implementation Note:
-        When JAX computes the gradient of a real-valued function H with respect to 
-        a complex variable z, it returns dH/dz* (the Wirtinger derivative conjugate).
-        Therefore, grad(H) returns exactly the term we need.
-
-    Args:
-        hamiltonian_func: A function H(t, alpha, args) -> float (Real Energy).
-                          'alpha' can be a JAX array or any PyTree of complex numbers.
-
-    Returns:
-        drift: A function f(t, alpha, args) -> d_alpha/dt that computes the time derivative.
+    Generates EOMs for Bosons using Real-Symplectic gradients.
+    
+    Instead of trusting complex autodiff (which can swap conjugates), 
+    we treat alpha = x + iy and enforce Hamilton's Real Equations:
+        dx/dt = + dH/dy  * (1/2)
+        dy/dt = - dH/dx  * (1/2)
+    
+    The factor 1/2 comes from the Wirtinger calculus relation:
+    d/dt(alpha) = -i dH/d(alpha*)
     """
-    # Differentiate H w.r.t the 2nd argument (alpha)
-    grad_H = jax.grad(hamiltonian_func, argnums=1)
-
+    
     def drift(t: Time, alpha: State, args: Args) -> State:
-        # 1. Compute the gradient dH/d(alpha*)
-        dH_dalpha_star = grad_H(t, alpha, args)
+        # 1. Define a Real-View wrapper of the Hamiltonian locally
+        def H_real(x, y):
+            # Reconstruct alpha
+            a = x + 1j * y
+            return hamiltonian_func(t, a, args)
+
+        # 2. Compute Real Gradients (Guaranteed correct direction)
+        # We differentiate H w.r.t Real and Imag parts
+        dH_dx = jax.grad(lambda x: H_real(x, alpha.imag))(alpha.real)
+        dH_dy = jax.grad(lambda y: H_real(alpha.real, y))(alpha.imag)
         
-        # 2. Apply Symplectic Structure: alpha_dot = -i * (dH/d_alpha*)
-        # We use tree_map to handle arbitrary structures (lists, dicts, single arrays)
-        d_alpha_dt = jax.tree_util.tree_map(lambda g: -1j * g, dH_dalpha_star)
+        # 3. Apply Symplectic Flow (Hamilton's Equations)
+        # Flow: dx/dt = +1/2 dH/dy
+        #       dy/dt = -1/2 dH/dx
+        # Factor 1/2 is necessary because d/dz* = 1/2 (d/dx + i d/dy)
         
-        return d_alpha_dt
+        dt_x =  0.5 * dH_dy
+        dt_y = -0.5 * dH_dx
+        
+        return dt_x + 1j * dt_y
 
     return drift
 
