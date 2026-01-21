@@ -13,7 +13,10 @@ authors = [
   {name = "Juan E. Ardila-Garcia", email = "juardilag@unal.edu.co"}
 ]
 dependencies = [
-
+    "jax",
+    "jaxlib",
+    "diffrax",  
+    "tqdm"
 ]
 
 [tool.setuptools.packages.find]
