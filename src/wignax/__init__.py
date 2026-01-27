@@ -28,7 +28,7 @@ from .utils.symplectic import (
 
 # 5. Expose Distributions (Initial States)
 # Users will use these often, so keeping them accessible is good.
-from .distributions.boson import sample_coherent, sample_quadratures
+from .distributions.boson import sample_coherent, sample_quadratures, sample_coherent_discrete_rings
 from .distributions.spin import sample_spin_discrete
 
 # 6. Define the Public API
