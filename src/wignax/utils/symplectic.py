@@ -82,7 +82,7 @@ def generating_eom_spins(
         # We assume S is an array where the last dimension is 3 (x, y, z)
         # If S is a PyTree (e.g. multiple spins), we map the cross product over leaves.
         dS_dt = jax.tree_util.tree_map(
-            lambda s, o: jnp.cross(s, o), 
+            lambda s, o: jnp.cross(s, -2.0*o), 
             S, 
             Omega_field
         )
