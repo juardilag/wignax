@@ -78,3 +78,37 @@ def sample_quadratures(
     noise_p = scale * jax.random.normal(k2, shape=(n_samples, n_modes))
 
     return (x0 + noise_x), (p0 + noise_p)
+
+
+def sample_coherent_discrete_rings(
+    key: jax.Array,
+    n_samples: int,
+    n_modes: int,
+    alpha_mean: float,
+    use_wigner_radius: bool = True 
+) -> jax.Array:
+    """
+    Experimental: Samples 'Quantized' Coherent state.
+    Instead of a Gaussian blob, we sample discrete Fock rings |n> 
+    weighted by the Poissonian distribution of the coherent state.
+    """
+    k1, k2 = jax.random.split(key)
+    
+    # 1. Sample Integer Photon Numbers n ~ Poisson(|alpha|^2)
+    mean_n = jnp.abs(alpha_mean)**2
+    n_integers = jax.random.poisson(k1, mean_n, shape=(n_samples, n_modes))
+    
+    # TWEAK: Switch between Wigner (n+0.5) and Integer (n) radii
+    if use_wigner_radius:
+        radii = jnp.sqrt(n_integers + 0.5)
+    else:
+        # Avoid sqrt(0) issues for vacuum if needed, though 0 is valid for JCM
+        radii = jnp.sqrt(n_integers.astype(jnp.float32))
+    
+    # Sample Uniform Phase
+    phases = jax.random.uniform(k2, shape=(n_samples, n_modes), minval=0, maxval=2*jnp.pi)
+    
+    # Construct Complex Alpha
+    samples_c = radii * jnp.exp(1j * phases)
+    
+    return samples_c
